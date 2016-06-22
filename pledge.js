@@ -26,8 +26,32 @@ Deferral.prototype.reject = function (reason){
 
 var $Promise = function(){
 	this.value = null,
-	this.state = 'pending'
+	this.state = 'pending',
+	this.handlerGroups = []
 };
+
+$Promise.prototype.then = function(successHandler, errorHandler){
+	function isFunc(value){
+		return typeof value === 'function';
+	}
+	var result = {
+		successCb: isFunc(successHandler) ? successHandler : null,
+		errorCb: isFunc(errorHandler) ? errorHandler : null
+	}
+	this.handlerGroups.push(result);
+	this.callHandlers();
+
+}
+
+$Promise.prototype.callHandlers = function(){
+	console.log("Current promise value:", this.value);
+	if (this.state === 'resolved') {
+		this.handlerGroups.forEach(function(group){
+			this.value = group.successCb(this.value);
+		});
+		this.handlerGroups = [];
+	}
+}
 
 
 // Makes a new deferral
