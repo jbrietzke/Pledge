@@ -30,28 +30,38 @@ var $Promise = function(){
 	this.handlerGroups = []
 };
 
-$Promise.prototype.then = function(successHandler, errorHandler){
+$Promise.prototype.then = function(successCb, errorCb){
+	// Helper to check if handler is a func
 	function isFunc(value){
 		return typeof value === 'function';
 	}
-	var result = {
-		successCb: isFunc(successHandler) ? successHandler : null,
-		errorCb: isFunc(errorHandler) ? errorHandler : null
-	}
-	this.handlerGroups.push(result);
-	this.callHandlers();
 
-}
+	var sCb = (isFunc(successCb) ? successCb : null);
+	var eCb = (isFunc(errorCb) ? errorCb : null);
+	console.log(sCb, eCb);
+
+	var result = {
+		successCb: sCb,
+		errorCb: eCb
+	};
+	this.handlerGroups.push(result);
+
+	console.log("RESULT:", result);
+	console.log("HANDLERS ARR:", this.handlerGroups);
+	// If promise is resolved, call the handlers
+	if(this.state === 'resolved'){
+		this.callHandlers();
+	}
+};
 
 $Promise.prototype.callHandlers = function(){
-	console.log("Current promise value:", this.value);
-	if (this.state === 'resolved') {
-		this.handlerGroups.forEach(function(group){
-			this.value = group.successCb(this.value);
-		});
-		this.handlerGroups = [];
+	var handlersLength = this.handlerGroups.length;
+	for(var i = 0; i < handlersLength-1; i++){
+		console.log("running loop");
+		this.value = this.handlerGroups[i].successCb(this.value);
 	}
-}
+	this.handlerGroups = [];
+};
 
 
 // Makes a new deferral
